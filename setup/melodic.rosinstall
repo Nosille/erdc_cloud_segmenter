@@ -1,0 +1,27 @@
+# Template .rosinstall for a REO vehicle
+
+# Segmentation
+- git:
+    local-name: ros_common/segmentation/segmenters_lib
+    uri: https://github.com/Nosille/segmenters_lib.git
+    version: master
+- git:
+    local-name: ros_common/segmentation/common_lib
+    uri: https://github.com/Nosille/common_lib.git
+    version: master
+- git:
+    local-name: ros_common/segmentation/roi_filters_lib
+    uri: https://github.com/Nosille/roi_filters_lib.git
+    version: master
+- git:
+    local-name: ros_common/segmentation/feature_extractors_lib
+    uri: https://github.com/Nosille/feature_extractors_lib.git
+    version: master
+- git:
+    local-name: ros_common/segmentation/object_builders_lib
+    uri: https://github.com/Nosille/object_builders_lib.git
+    version: master
+- git:
+    local-name: ros_common/segmentation/tracking_lib
+    uri: https://github.com/Nosille/tracking_lib.git
+    version: master

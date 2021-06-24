@@ -1,0 +1,14 @@
+<library path="lib/libcloud_segmentor_nodelet">
+  <class name="cloud_segmentor/segmenter_nodelet" type="Cloud_Segmentor::Segmenter_Nodelet" base_class_type="nodelet::Nodelet">
+  <description>
+  This is my nodelet.
+  </description>
+  </class>
+</library>
+<library path="lib/libcloud_tracker_nodelet">
+  <class name="cloud_segmentor/tracker_nodelet" type="Cloud_Segmentor::Tracker_Nodelet" base_class_type="nodelet::Nodelet">
+  <description>
+  This is my nodelet.
+  </description>
+  </class>
+</library>

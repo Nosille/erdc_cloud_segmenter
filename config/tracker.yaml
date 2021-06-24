@@ -1,0 +1,199 @@
+map_frame_id: "odom"
+sensor_frame_id: "velodyne0"
+
+input_topic: "/lidar/merged/buffered"
+clusters_topic: "/lidar/merged/points_clusters"
+
+detect: 
+  {
+    ground_topic: "/lidar/merged/points_ground",
+    nonground_topic: "/lidar/merged/points_nonground",
+
+    ground_segmenter_type: "GroundPlaneFittingSegmenter",
+    nonground_segmenter_type: "EuclideanSegmenter",
+
+    ## Important to use roi filter to speed up "ground segmentation"
+    use_roi_filter: true,
+    use_ground_segmenter: true,
+    use_nonground_segmenter: true,
+
+  roi: 
+    {
+      ## ROI range
+      # type: true, float, float, float
+      # default: 60.0,999.0,999.0 in SegMatch
+      # default: "Cylinder"(0,60)
+      roi_type: "Cylinder",
+      #roi_type: "Square",
+      # ROI filter needs lidar installed height
+      roi_lidar_height_m: 1.993,
+      ## Horizontal range
+      #--- for "Cylinder"
+      roi_radius_min_m: 2.,
+      roi_radius_max_m: 50.,
+      #--- for "Square"
+      #roi_radius_min_m: 15.,
+      #roi_radius_max_m: 120.,
+      # Vertical range
+      roi_height_below_m: 1.,
+      roi_height_above_m: 10.,
+    },
+
+  Segmenter: 
+    {
+      #---------------------------------------- Ground Segmenter
+      ## default: Ground Plane Fitting Segmenter
+
+      ### Ground Plane Fitting Segmenter
+      ## in Paper: Nsegs=3/Niter=3/Nlpr=20/THseeds=0.4m/THdist=0.2m
+      # gpf_sensor_model: 64,
+      gpf_sensor_height: 1.993,
+      # fitting multiple planes, at most 6 segments
+      ## default: 1
+      gpf_num_segment: 3,
+      #gpf_num_segment: 3,
+      # number of iterations
+      #gpf_num_iter: 3,
+      gpf_num_iter: 10,
+      ## number of points used to estimate the lowest point representative(LPR)
+      # double of senser model???
+      #gpf_num_lpr: 20,
+      gpf_num_lpr: 128,
+      #gpf_num_lpr: 1280,
+      gpf_th_lprs: 0.08,
+      # threshold for points to be considered initial seeds
+      gpf_th_seeds: 0.2,
+      #gpf_th_seeds: 0.5,
+      # ground points threshold distance from the plane <== large to guarantee safe removal
+      #gpf_th_gnds: 0.23,
+      gpf_th_gnds: 0.2,
+
+      ### Ground RANSAC Segmenter
+      # 0.3 for better perforamce
+      ## default: 0.3
+      sac_distance_threshold: 0.2,
+      ## default: 100
+      sac_max_iteration: 100,
+      ## default: 0.99
+      sac_probability: 0.99,
+
+      #---------------------------------------- Non-ground Segmenter
+      # default: Region Euclidean Cluster Segmenter
+
+      ### Region Euclidean Cluster Segmenter
+      ## regions' size list
+      # type: std::vector<int>
+      # default: 14
+      rec_region_size: 14,
+      #rec_region_size: 7,
+      rec_region_sizes: [4, 5, 5, 5, 5, 5, 5, 4, 5, 5, 5, 5, 5, 5],
+      # the same as euclidean distance tolerence for ECE
+      rec_region_initial_tolerance: 0.2,
+      ## increase euclidean distance tolerence between adjacent region
+      # type: float
+      # default: 0.2
+      rec_region_delta_tolerance: 0.1,
+      ## minimum/maximum cluster's point number
+      # type: int
+      # default: 5/30000
+      #rec_min_cluster_size: 20,
+      rec_min_cluster_size: 50,
+      rec_max_cluster_size: 300000,
+      ## Clusters merged between regions
+      # type: bool
+      # default: false
+      #rec_use_region_merge: false,
+      rec_use_region_merge: true,
+      ## Merge corresponding ground box overlap IoU threshold
+      # type: float
+      # default: 0., merge if there is overlap
+      rec_region_merge_tolerance: 4.0,
+
+      ### Euclidean Cluster Segmenter
+      # 0.2,5,30000 in online_learning
+      # 0.2,200,15000 in SegMatch
+      ## euclidean distance threshold
+      # type: float
+      # default: 0.25
+      ec_tolerance: 0.2,
+      ## minimum/maximum cluster's point number
+      # type: int
+      # default: 5/30,000
+      ec_min_cluster_size: 20,
+      #ec_min_cluster_size: 50,
+      ec_max_cluster_size: 300000,
+
+
+      don_segmenter_range_threshold: 0.2,
+      don_segmenter_ec_min_size: 50,
+      don_segmenter_ec_max_size: 300000, 
+      don_segmenter_ec_tolerance: 1.0,
+      don_segmenter_small_scale: 0.5,
+      don_segmenter_large_scale: 2.0,
+    },
+  }
+
+track: 
+  {
+    # intermediate segments
+    pub_segments_topic: "/lidar/tracking/segments",
+    pub_segments_coarse_topic: "/lidar/tracking/segments/coarse",
+    pub_segments_predict_topic: "/lidar/tracking/segments/predict",
+    # intermediate visualization
+    pub_tracking_objects_topic: "/lidar/tracking/objects",
+    pub_tracking_objects_cloud_topic: "/lidar/tracking/clouds",
+    pub_tracking_objects_velocity_topic: "/lidar/tracking/objects_vel",
+    pub_tracking_objects_trajectory_topic: "/lidar/tracking/trajectory",
+    # output of tracking system
+    pub_output_objects_topic: "/lidar/tracking/output/objects",
+    pub_output_trajectories_topic: "/lidar/tracking/output/trajectories",
+    
+    threshold_contian_IoU: 0.01,
+
+    TrackingWorker: 
+      {
+        ##----------------- Matcher: tracker<->observed object association
+        matcher_method_name: "hungarian_matcher",
+        matcher_match_distance_maximum: 4.0,
+        # motion consistency
+        matcher_location_distance_weight: 0.6,
+        matcher_direction_distance_weight: 0.2,
+        # appearance consistency
+        matcher_bbox_size_distance_weight: 0.1,
+        matcher_point_num_distance_weight: 0.1,
+        matcher_histogram_distance_weight: 0.5,
+
+        ##----------------- Tracker
+        # Tracker Filter setup
+        filter_method_name: "robust_kalman_filter",
+        filter_use_adaptive: true,
+        # equals to matcher_match_distance_maximum
+        filter_association_score_maximum: 4.0,
+        filter_measurement_noise: 0.4,
+        filter_initial_velocity_noise: 5.0,
+        # | xy_propagation_noise    0           0          |
+        # |         0   xy_propagation_noise    0          |
+        # |         0               0  z_propagation_noise |
+        filter_xy_propagation_noise: 10.0,
+        filter_z_propagation_noise: 10.0,
+        filter_breakdown_threshold_maximum: 10.0,
+        # Basic Tracker setup
+        tracker_cached_history_size_maximum: 5,
+        tracker_consecutive_invisible_maximum: 1,
+        tracker_visible_ratio_minimum: 0.6,
+        tracker_acceleration_noise_maximum: 5,
+        tracker_speed_noise_maximum: 0.4,
+
+        ##----------------- Tracking Objects collect conditions
+        # If true, histograms between tracker and observation are considered
+        # type: bool, int
+        # default:
+        tracking_use_histogram_for_match: false,
+        tracking_histogram_bin_size: 10,
+        # initial tracker ages 1
+        #  1 for more N-samples
+        tracking_collect_age_minimum: 1,
+        # sometimes, detection failed
+        tracking_collect_consecutive_invisible_maximum: 1,
+      }
+  }
