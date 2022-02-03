@@ -9,7 +9,7 @@ detect:
     ground_topic: "/lidar/merged/points_ground",
     nonground_topic: "/lidar/merged/points_nonground",
 
-    ground_segmenter_type: "GroundPlaneFittingSegmenter",
+    ground_segmenter_type: "GroundProgressiveMorphologicalFilter",
     nonground_segmenter_type: "EuclideanSegmenter",
 
     ## Important to use roi filter to speed up "ground segmentation"
@@ -77,6 +77,15 @@ detect:
       ## default: 0.99
       sac_probability: 0.99,
 
+      ### Ground ProgressiveMorphologicalFilter Segmente
+      pmf_cell_size: 0.5,
+      pmf_max_window_size: 20,
+      pmf_slope: 1.0,
+      pmf_initial_distance: 0.2,
+      pmf_max_distance: 1.0,
+      pmf_std: 1.0,
+      pmf_meanK: 6,
+
       #---------------------------------------- Non-ground Segmenter
       # default: Region Euclidean Cluster Segmenter
 
@@ -115,14 +124,13 @@ detect:
       ## euclidean distance threshold
       # type: float
       # default: 0.25
-      ec_tolerance: 0.2,
+      ec_tolerance: 0.5,
       ## minimum/maximum cluster's point number
       # type: int
       # default: 5/30,000
       ec_min_cluster_size: 20,
       #ec_min_cluster_size: 50,
       ec_max_cluster_size: 300000,
-
 
       don_segmenter_range_threshold: 0.2,
       don_segmenter_ec_min_size: 50,

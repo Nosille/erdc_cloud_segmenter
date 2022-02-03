@@ -24,7 +24,7 @@ Copyright (c) 2017
 
 // #include <dynamic_reconfigure/server.h>
 // #include <dynamic_reconfigure/client.h>
-//#include <cloud_segmentor/trackerConfig.h>
+//#include <erdc_cloud_segmenter/trackerConfig.h>
 
 #include "common/color.hpp"
 #include "common/bounding_box.hpp"
@@ -40,7 +40,7 @@ Copyright (c) 2017
 #include "common/msgs/autosense_msgs/TrackingObjectArray.h"
 #include "common/msgs/autosense_msgs/TrackingFixedTrajectoryArray.h"
 
-namespace Cloud_Segmentor
+namespace ERDC_Cloud_Segmenter
 {
   class Tracker
   {
@@ -56,7 +56,7 @@ namespace Cloud_Segmentor
     virtual void onInit();
 
     //! Callback
-    //void reconfigure_server_callback(cloud_segmentor::trackerConfig &config, uint32_t level);
+    //void reconfigure_server_callback(erdc_cloud_segmenter::trackerConfig &config, uint32_t level);
     void input_callback(const autosense_msgs::PointCloud2ArrayConstPtr& msg);
     static bool getSensorPose(const tf2_ros::Buffer& tf_buffer,
                               const std::string& source_frame,
@@ -88,8 +88,8 @@ namespace Cloud_Segmentor
     ros::Publisher pub_tracking_output_objects_;
     ros::Publisher pub_tracking_output_trajectories_;
 
-    //cloud_segmentor::trackerConfig trackerConfig_;
-    //boost::shared_ptr<dynamic_reconfigure::Server<cloud_segmentor::trackerConfig> > drServer_;
+    //erdc_cloud_segmenter::trackerConfig trackerConfig_;
+    //boost::shared_ptr<dynamic_reconfigure::Server<erdc_cloud_segmenter::trackerConfig> > drServer_;
     //bool received_trackerConfig_;
 
     autosense::TrackingWorkerParams tracking_params_;
@@ -116,7 +116,7 @@ namespace Cloud_Segmentor
     boost::recursive_mutex drServer_mutex_;
 
   }; // class Segmenter
-} // namespace Cloud_Segmentor
+} // namespace ERDC_Cloud_Segmenter
 
 #endif  // TRACKER_H
 

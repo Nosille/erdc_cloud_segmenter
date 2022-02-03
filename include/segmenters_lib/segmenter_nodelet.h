@@ -1,7 +1,7 @@
 #include <nodelet/nodelet.h>
 #include "segmenter.h"
 
-namespace Cloud_Segmentor{
+namespace ERDC_Cloud_Segmenter{
 class Segmenter_Nodelet: public nodelet::Nodelet
  {
 
@@ -9,7 +9,7 @@ class Segmenter_Nodelet: public nodelet::Nodelet
     Segmenter_Nodelet(){}
     ~Segmenter_Nodelet(){}
     virtual void onInit();
-    boost::shared_ptr<Cloud_Segmentor::Segmenter> inst_;
+    boost::shared_ptr<ERDC_Cloud_Segmenter::Segmenter> inst_;
 
     };
 

@@ -6,7 +6,7 @@
 
 return_dir=$(pwd)
 
-roscd cloud_segmentor
+roscd erdc_cloud_segmenter
 
 if [ ! -f "setup/melodic.rosinstall" ]; then
     echo "Something is wrong! I can't find the rosinstall file"

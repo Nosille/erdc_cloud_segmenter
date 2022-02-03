@@ -1,28 +1,40 @@
 <launch>
+    <arg name="machine"                                 default=""/>
+    <arg name="output"                                  default="screen"/>
+
     <arg name="run_as_nodelet"                          default="true"/>
     <arg name="nodelet_manager"                         default="segmenter_nodelet_manager"/>
-    <arg name="nodelet_namespace"                       default="cloud_segmentor"/>
+    <arg name="nodelet_namespace"                       default="cloud_segmenter"/>
     <arg name="start_nodelet_manager"                   default="true"/>
 
-    <arg name="tracker_yaml"                          default="$(find cloud_segmentor)/config/tracker.yaml"/>
+    <arg name="tracker_yaml"                          default="$(find erdc_cloud_segmenter)/config/tracker.yaml"/>
 
     <node if="$(eval arg('start_nodelet_manager') and arg('run_as_nodelet'))" 
         ns="$(arg nodelet_namespace)" name="$(arg nodelet_manager)" 
-        pkg="nodelet" type="nodelet" args="manager" output="screen"/>
+        pkg="nodelet" type="nodelet" args="manager" 
+        machine="$(arg machine)" output="$(arg output)"/>
 
     <!-- Load Parameters -->
     <rosparam command="load" ns="$(arg nodelet_namespace)" file="$(arg tracker_yaml)"/>
     
     <!-- Launch as Nodelet -->
     <group if="$(arg run_as_nodelet)">
-        <node ns="$(arg nodelet_namespace)" name="segmenter_node" pkg="nodelet" type="nodelet" args="load cloud_segmentor/segmenter_nodelet /$(arg nodelet_namespace)/$(arg nodelet_manager)" output="screen"/>
-        <node ns="$(arg nodelet_namespace)" name="tracker_node" pkg="nodelet" type="nodelet" args="load cloud_segmentor/tracker_nodelet /$(arg nodelet_namespace)/$(arg nodelet_manager)" output="screen"/>
+        <node ns="$(arg nodelet_namespace)" name="segmenter_node" 
+              pkg="nodelet" type="nodelet" args="load erdc_cloud_segmenter/segmenter_nodelet /$(arg nodelet_namespace)/$(arg nodelet_manager)" 
+              machine="$(arg machine)" output="$(arg output)"/>
+        <node ns="$(arg nodelet_namespace)" name="tracker_node" 
+              pkg="nodelet" type="nodelet" args="load erdc_cloud_segmenter/tracker_nodelet /$(arg nodelet_namespace)/$(arg nodelet_manager)" 
+              machine="$(arg machine)" output="$(arg output)"/>
     </group>
 
     <!-- Launch as Node -->
     <group unless="$(arg run_as_nodelet)">
-        <node ns="$(arg nodelet_namespace)" name="segmenter_node" pkg="cloud_segmentor" type="segmenter" output="screen"/>
-        <node ns="$(arg nodelet_namespace)" name="tracker_node" pkg="cloud_segmentor" type="tracker" output="screen"/>
+        <node ns="$(arg nodelet_namespace)" name="segmenter_node" 
+              pkg="cloud_segmenter" type="segmenter" 
+              machine="$(arg machine)" output="$(arg output)"/>
+        <node ns="$(arg nodelet_namespace)" name="tracker_node" 
+              pkg="cloud_segmenter" type="tracker" 
+              machine="$(arg machine)" output="$(arg output)"/>
     </group>
    
 </launch>

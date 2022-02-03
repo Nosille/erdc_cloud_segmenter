@@ -1,12 +1,12 @@
-<library path="lib/libcloud_segmentor_nodelet">
-  <class name="cloud_segmentor/segmenter_nodelet" type="Cloud_Segmentor::Segmenter_Nodelet" base_class_type="nodelet::Nodelet">
+<library path="lib/liberdc_cloud_segmenter_nodelet">
+  <class name="erdc_cloud_segmenter/segmenter_nodelet" type="ERDC_Cloud_Segmenter::Segmenter_Nodelet" base_class_type="nodelet::Nodelet">
   <description>
   This is my nodelet.
   </description>
   </class>
 </library>
 <library path="lib/libcloud_tracker_nodelet">
-  <class name="cloud_segmentor/tracker_nodelet" type="Cloud_Segmentor::Tracker_Nodelet" base_class_type="nodelet::Nodelet">
+  <class name="erdc_cloud_segmenter/tracker_nodelet" type="ERDC_Cloud_Segmenter::Tracker_Nodelet" base_class_type="nodelet::Nodelet">
   <description>
   This is my nodelet.
   </description>

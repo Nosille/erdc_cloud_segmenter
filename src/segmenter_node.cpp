@@ -10,7 +10,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh_private("~");
 
   //Create Segmenter class
-  Cloud_Segmentor::Segmenter node(nh, nh_private);
+  ERDC_Cloud_Segmenter::Segmenter node(nh, nh_private);
 
   //Setup blocking spinner for subscribers
   ros::MultiThreadedSpinner sub_spinner(0); // Use a thread for each core

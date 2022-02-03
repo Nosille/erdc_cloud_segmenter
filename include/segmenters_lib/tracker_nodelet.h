@@ -1,7 +1,7 @@
 #include <nodelet/nodelet.h>
 #include "tracker.h"
 
-namespace Cloud_Segmentor{
+namespace ERDC_Cloud_Segmenter{
 class Tracker_Nodelet: public nodelet::Nodelet
  {
 
@@ -9,7 +9,7 @@ class Tracker_Nodelet: public nodelet::Nodelet
     Tracker_Nodelet(){}
     ~Tracker_Nodelet(){}
     virtual void onInit();
-    boost::shared_ptr<Cloud_Segmentor::Tracker> inst_;
+    boost::shared_ptr<ERDC_Cloud_Segmenter::Tracker> inst_;
 
     };
 

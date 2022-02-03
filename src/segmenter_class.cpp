@@ -5,7 +5,7 @@
 #include <segmenters/segmenter_manager.hpp>  // segmenter::createGroundSegmenter
 
 
-namespace Cloud_Segmentor
+namespace ERDC_Cloud_Segmenter
 {
   Segmenter::Segmenter(const ros::NodeHandle &node_handle, 
                         const ros::NodeHandle &private_node_handle) 
@@ -77,9 +77,9 @@ namespace Cloud_Segmentor
  
 
   //Setup Dynamic Reconfigure Server
-    dynamic_reconfigure::Server<cloud_segmentor::segmenterConfig>::CallbackType 
+    dynamic_reconfigure::Server<erdc_cloud_segmenter::segmenterConfig>::CallbackType 
         drServerCallback_ = boost::bind(&Segmenter::reconfigure_server_callback, this, _1, _2);
-    drServer_.reset(new dynamic_reconfigure::Server<cloud_segmentor::segmenterConfig>(drServer_mutex_, nh_));
+    drServer_.reset(new dynamic_reconfigure::Server<erdc_cloud_segmenter::segmenterConfig>(drServer_mutex_, nh_));
     drServer_->setCallback(drServerCallback_);
     
     //Wait on dyanamic param server to intialize values
@@ -99,7 +99,7 @@ namespace Cloud_Segmentor
 
   // ROS publishers and subscribers
     //Pointcloud subscribers
-    sub_input_ = nh_.subscribe<sensor_msgs::PointCloud2>(input_topic_, 10, &Segmenter::input_callback, this);
+    sub_input_ = nh_.subscribe<sensor_msgs::PointCloud2>(input_topic_, 1, &Segmenter::input_callback, this);
 
 
     //Pointcloud publishers
@@ -108,7 +108,7 @@ namespace Cloud_Segmentor
     pub_segmented_ = nh_.advertise<autosense_msgs::PointCloud2Array>(clusters_topic_, 1);
   }
 
-  void Segmenter::reconfigure_server_callback(cloud_segmentor::segmenterConfig &config, uint32_t level) 
+  void Segmenter::reconfigure_server_callback(erdc_cloud_segmenter::segmenterConfig &config, uint32_t level) 
   {
     if (received_segmenterConfig_)
     {
@@ -125,46 +125,23 @@ namespace Cloud_Segmentor
   {
     ros::WallTime begin = ros::WallTime::now();
 
-//     //Transform to storage coordinates
-//     sensor_msgs::PointCloud2 cloud_in(*msg), cloud_transformed, cloud_filtered;
-
-//     geometry_msgs::TransformStamped transform;
-//     try
-//     {
-//       if(tfBuffer_.canTransform(fixed_frame_id_, msg->header.frame_id, cloud_in.header.stamp, ros::Duration(wait_for_tf_delay_)))
-//       {
-//         transform = tfBuffer_.lookupTransform(fixed_frame_id_, msg->header.frame_id, msg->header.stamp, ros::Duration(wait_for_tf_delay_));
-    
-//         tf2::doTransform(cloud_in, cloud_transformed, transform);
-
-//         int count = cloud_in.width * cloud_in.height;
-//         ROS_DEBUG_STREAM_NAMED(node_name, sourceCloud_[index].cloud_in_topic << " has " << count << " points.");
-//       }
-//       else
-//       {
-//         ROS_WARN_STREAM_NAMED(node_name, "Cloud_in is waiting for transform from " << msg->header.frame_id << " to " << fixed_frame_id_ << " to become available.");
-//         return;
-//       }
-//     }
-//     catch (tf2::TransformException ex){
-//       ROS_WARN_STREAM_NAMED(node_name, "Cloud "<< index <<" Callback: " << ex.what());
-//       return;
-//     }
+  //kickout if no subscribers
+    if(pub_ground_.getNumSubscribers()<=0 && 
+       pub_nonground_.getNumSubscribers()<=0 &&
+       pub_segmented_.getNumSubscribers()<=0) return; 
 
     autosense::PointICloudPtr cloud(new autosense::PointICloud);
     pcl::fromROSMsg(*msg, *cloud);
-    ROS_INFO_STREAM(" Cloud inputs: " << cloud->size() << " Points");
+    ROS_DEBUG_STREAM(" Cloud inputs: " << cloud->size() << " Points");
 
     std_msgs::Header header = msg->header;
-    //header.frame_id = frame_id_;
-    //header.stamp = ros::Time::now();
 
   //ROI filter
     if (segmenterConfig_.use_roi_filter) 
     {
         autosense::roi::applyROIFilter<autosense::PointI>(params_roi_, cloud);
     }
-    ROS_INFO_STREAM(" After ROIFilter: " << cloud->size() << " Points");
+    ROS_DEBUG_STREAM(" After ROIFilter: " << cloud->size() << " Points");
 
 
   //Ground Segmenter
@@ -178,23 +155,31 @@ namespace Cloud_Segmentor
        *cloud_ground = *cloud_clusters[0];
        *cloud_nonground = *cloud_clusters[1];
 
-       //Convert to sensor_msgs and publish
-       sensor_msgs::PointCloud2::Ptr ground_out(new sensor_msgs::PointCloud2);  //nodelets require the published msg to be a pointer
-       autosense::common::publishCloud<autosense::PointI>(pub_ground_, header, *cloud_ground);
+       //Convert to sensor_msgs and publish ground
+       if(pub_ground_.getNumSubscribers()>0) 
+       {
+         sensor_msgs::PointCloud2::Ptr ground_out(new sensor_msgs::PointCloud2);  //nodelets require the published msg to be a pointer
+         autosense::common::publishCloud<autosense::PointI>(pub_ground_, header, *cloud_ground);
+       }
     }
     else 
     {
       *cloud_nonground = *cloud;
     }
    
-    sensor_msgs::PointCloud2::Ptr nonground_out(new sensor_msgs::PointCloud2);  //nodelets require the published msg to be a pointer
-    autosense::common::publishCloud<autosense::PointI>(pub_nonground_, header, *cloud_nonground);
-    
+    //Convert to sensor_msgs and publish nonground
+    if(pub_nonground_.getNumSubscribers()>0) 
+    {
+      sensor_msgs::PointCloud2::Ptr nonground_out(new sensor_msgs::PointCloud2);  //nodelets require the published msg to be a pointer
+      autosense::common::publishCloud<autosense::PointI>(pub_nonground_, header, *cloud_nonground);
+    }
+
   //Nonground segmenter
-    if (segmenterConfig_.use_nonground_segmenter) 
+    if (segmenterConfig_.use_nonground_segmenter  && pub_segmented_.getNumSubscribers()>0) 
     {
       // reset clusters
       cloud_clusters.clear();
+      //publish cloud array
       nonground_segmenter_->segment(*cloud_nonground, cloud_clusters);
       autosense::common::publishPointCloudArray<autosense::PointICloudPtr>(pub_segmented_, header, cloud_clusters);
     }
@@ -203,6 +188,5 @@ namespace Cloud_Segmentor
     ROS_DEBUG_STREAM_NAMED(node_name, "Segmentation took " << duration.toSec() << "sec");
   }
 
-
-} // namespace Cloud_Segmentor
+} // namespace ERDC_Cloud_Segmenter
 

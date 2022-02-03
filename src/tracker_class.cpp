@@ -5,7 +5,7 @@
 #include <segmenters/segmenter_manager.hpp>  // segmenter::createGroundSegmenter
 
 
-namespace Cloud_Segmentor
+namespace ERDC_Cloud_Segmenter
 {
   Tracker::Tracker(const ros::NodeHandle &node_handle, 
                         const ros::NodeHandle &private_node_handle) 
@@ -83,9 +83,9 @@ namespace Cloud_Segmentor
     }
 
   //Setup Dynamic Reconfigure Server
-    // dynamic_reconfigure::Server<cloud_segmentor::trackerConfig>::CallbackType 
+    // dynamic_reconfigure::Server<erdc_cloud_segmenter::trackerConfig>::CallbackType 
     //     drServerCallback_ = boost::bind(&Tracker::reconfigure_server_callback, this, _1, _2);
-    // drServer_.reset(new dynamic_reconfigure::Server<cloud_segmentor::trackerConfig>(drServer_mutex_, nh_));
+    // drServer_.reset(new dynamic_reconfigure::Server<erdc_cloud_segmenter::trackerConfig>(drServer_mutex_, nh_));
     // drServer_->setCallback(drServerCallback_);
     
     //Wait on dyanamic param server to intialize values
@@ -100,7 +100,7 @@ namespace Cloud_Segmentor
 
   // ROS publishers and subscribers
     //Pointcloud subscribers
-    sub_input_ = nh_.subscribe<autosense_msgs::PointCloud2Array>(input_topic_, 10, &Tracker::input_callback, this);
+    sub_input_ = nh_.subscribe<autosense_msgs::PointCloud2Array>(input_topic_, 1, &Tracker::input_callback, this);
 
 
     //Pointcloud publishers
@@ -118,7 +118,7 @@ namespace Cloud_Segmentor
     pub_tracking_output_trajectories_ = nh_.advertise<autosense_msgs::TrackingFixedTrajectoryArray>(pub_output_trajectories_topic_, 1);
   }
 
-  // void Tracker::reconfigure_server_callback(cloud_segmentor::trackerConfig &config, uint32_t level) 
+  // void Tracker::reconfigure_server_callback(erdc_cloud_segmenter::trackerConfig &config, uint32_t level) 
   // {
   //   if (received_trackerConfig_)
   //   {
@@ -170,7 +170,8 @@ namespace Cloud_Segmentor
     ROS_INFO_STREAM("Objects built. Took " << clock_builder.takeRealTime() << "ms.");
 
     // visualize initial coarse segments
-    autosense::common::publishObjectsMarkers(pub_segments_coarse_, header, autosense::common::MAGENTA.rgbA, objects);
+    if(pub_segments_coarse_.getNumSubscribers()>0) 
+      autosense::common::publishObjectsMarkers(pub_segments_coarse_, header, autosense::common::MAGENTA.rgbA, objects);
 
    /**
      * @brief Use Tracking temporal information to improve segmentation
@@ -224,9 +225,11 @@ namespace Cloud_Segmentor
     }
 
     // visualize expected objects
-    autosense::common::publishObjectsMarkers(pub_segments_predict_, header, autosense::common::DARKGREEN.rgbA, expected_objects);
+    if(pub_segments_predict_.getNumSubscribers()>0) 
+      autosense::common::publishObjectsMarkers(pub_segments_predict_, header, autosense::common::DARKGREEN.rgbA, expected_objects);
     // visualize segmentation results
-    autosense::common::publishObjectsMarkers(pub_segments_, header, autosense::common::GREEN.rgbA, obsv_objects);
+    if(pub_segments_.getNumSubscribers()>0) 
+      autosense::common::publishObjectsMarkers(pub_segments_, header, autosense::common::GREEN.rgbA, obsv_objects);
 
     autosense::tracking::TrackingOptions tracking_options;
     tracking_options.velo2world_trans = velo2world;
@@ -244,26 +247,32 @@ namespace Cloud_Segmentor
      */
     const std::vector<autosense::ObjectPtr> &tracking_objects_world =
         tracking_worker_->collectTrackingObjectsInWorld();
-    autosense::common::publishTrackingObjects(pub_tracking_output_objects_, header, tracking_objects_world);
+    if(pub_tracking_output_objects_.getNumSubscribers()>0) 
+      autosense::common::publishTrackingObjects(pub_tracking_output_objects_, header, tracking_objects_world);
     // publish fixed trajectory for classification
     const std::vector<autosense::FixedTrajectory> &fixed_trajectories =
         tracking_worker_->collectFixedTrajectories();
-    autosense::common::publishTrackingFixedTrajectories(pub_tracking_output_trajectories_, header, fixed_trajectories);
+    if(pub_tracking_output_trajectories_.getNumSubscribers()>0) 
+      autosense::common::publishTrackingFixedTrajectories(pub_tracking_output_trajectories_, header, fixed_trajectories);
 
     // visualize tracking process results, Object Trajectories
     const std::map<autosense::IdType, autosense::Trajectory> &trajectories =
         tracking_worker_->collectTrajectories();
-    autosense::common::publishObjectsTrajectory(pub_tracking_objects_trajectory_, header, pose.inverse(), trajectories);
-    autosense::common::publishObjectsMarkers(pub_tracking_objects_, header,autosense::common::CYAN.rgbA, tracking_objects_velo);
+    if(pub_tracking_objects_trajectory_.getNumSubscribers()>0) 
+      autosense::common::publishObjectsTrajectory(pub_tracking_objects_trajectory_, header, pose.inverse(), trajectories);
+    if(pub_tracking_objects_.getNumSubscribers()>0) 
+      autosense::common::publishObjectsMarkers(pub_tracking_objects_, header,autosense::common::CYAN.rgbA, tracking_objects_velo);
     // construct tracking-help segmentation results
     std::vector<autosense::PointICloudPtr> objects_cloud;
     for (size_t idx = 0u; idx < tracking_objects_velo.size(); ++idx) 
     {
         objects_cloud.push_back(tracking_objects_velo[idx]->cloud);
     }
-    autosense::common::publishClustersCloud<autosense::PointI>(pub_tracking_objects_cloud_, header, objects_cloud);
+    if(pub_tracking_objects_cloud_.getNumSubscribers()>0)   
+      autosense::common::publishClustersCloud<autosense::PointI>(pub_tracking_objects_cloud_, header, objects_cloud);
     // Velocity value and direction
-    autosense::common::publishObjectsVelocityArrow(pub_tracking_objects_velocity_, header, autosense::common::RED.rgbA, tracking_objects_velo);
+    if(pub_tracking_objects_velocity_.getNumSubscribers()>0) 
+      autosense::common::publishObjectsVelocityArrow(pub_tracking_objects_velocity_, header, autosense::common::RED.rgbA, tracking_objects_velo);
   }
   
   bool Tracker::getSensorPose(const tf2_ros::Buffer& tf_buffer,
@@ -306,5 +315,5 @@ namespace Cloud_Segmentor
 }
 
 
-} // namespace Cloud_Segmentor
+} // namespace ERDC_Cloud_Segmenter
 

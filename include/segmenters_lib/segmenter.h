@@ -9,7 +9,7 @@ Copyright (c) 2017
 #ifndef SEGMENTER_H
 #define SEGMENTER_H
 
-#include "cloud_segmentor.h"
+//#include "sensor_fusion.h"
 
 #include <mutex>
 
@@ -26,9 +26,16 @@ Copyright (c) 2017
 #include <pcl/features/normal_3d.h>
 #include <pcl/filters/extract_indices.h>
 
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/PCLPointCloud2.h>
+#include <pcl/point_representation.h>
+#include <pcl_ros/transforms.h>
+#include <pcl_conversions/pcl_conversions.h>
+
 #include <dynamic_reconfigure/server.h>
 // #include <dynamic_reconfigure/client.h>
-#include <cloud_segmentor/segmenterConfig.h>
+#include <erdc_cloud_segmenter/segmenterConfig.h>
 
 #include "common/color.hpp"
 #include "common/parameter.hpp"  // common::getSegmenterParams
@@ -52,7 +59,7 @@ Copyright (c) 2017
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
-namespace Cloud_Segmentor
+namespace ERDC_Cloud_Segmenter
 {
   class Segmenter
   {
@@ -68,7 +75,7 @@ namespace Cloud_Segmentor
     virtual void onInit();
 
     //! Callback
-    void reconfigure_server_callback(cloud_segmentor::segmenterConfig &config, uint32_t level);
+    void reconfigure_server_callback(erdc_cloud_segmenter::segmenterConfig &config, uint32_t level);
     void input_callback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
     // Methods
@@ -89,8 +96,8 @@ namespace Cloud_Segmentor
     ros::Publisher pub_nonground_;
     ros::Publisher pub_segmented_;
 
-    cloud_segmentor::segmenterConfig segmenterConfig_;
-    boost::shared_ptr<dynamic_reconfigure::Server<cloud_segmentor::segmenterConfig> > drServer_;
+    erdc_cloud_segmenter::segmenterConfig segmenterConfig_;
+    boost::shared_ptr<dynamic_reconfigure::Server<erdc_cloud_segmenter::segmenterConfig> > drServer_;
     bool received_segmenterConfig_;
 
     autosense::ROIParams params_roi_;
@@ -112,7 +119,7 @@ namespace Cloud_Segmentor
     boost::recursive_mutex drServer_mutex_;
 
   }; // class Segmenter
-} // namespace Cloud_Segmentor
+} // namespace ERDC_Cloud_Segmenter
 
 #endif  // Segmenter_H
 

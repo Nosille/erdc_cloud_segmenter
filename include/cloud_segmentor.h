@@ -6,8 +6,8 @@ Copyright (c) 2017
 
 */
 
-#ifndef CLOUD_SEGMENTOR_H
-#define CLOUD_SEGMENTOR_H
+#ifndef ERDC_CLOUD_SEGMENTER_H
+#define ERDC_CLOUD_SEGMENTER_H
 
 #include <std_msgs/String.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -31,7 +31,7 @@ Copyright (c) 2017
 
 #include <cv_bridge/cv_bridge.h>
 
-namespace Cloud_Segmentor
+namespace ERDC_Cloud_Segmenter
 {
   class SourceCloud
   {
@@ -118,7 +118,7 @@ namespace Cloud_Segmentor
   //   return (viewer);
   // };
   
-} // namespace Cloud_Segmentor
+} // namespace Cloud_Segmenter
 
-#endif  // Cloud_Fusion_H
+#endif  // ERDC_CLOUD_SEGMENTER_H
 

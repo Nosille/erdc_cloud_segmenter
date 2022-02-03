@@ -1,12 +1,13 @@
-input_topic: "/lidar/merged/buffered"
-clusters_topic: "/lidar/merged/buffered/points_clusters"
+input_topic: "/lidar/merged"
+clusters_topic: "/lidar/merged/points_clusters"
 
 detect: 
   {
-    ground_topic: "/lidar/merged/buffered/points_ground",
-    nonground_topic: "/lidar/merged/buffered/points_nonground",
+    ground_topic: "/lidar/merged/points_ground",
+    nonground_topic: "/lidar/merged/points_nonground",
 
-    ground_segmenter_type: "GroundPlaneFittingSegmenter",
+    #ground_segmenter_type: "GroundPlaneFittingSegmenter",
+    ground_segmenter_type: "GroundProgressiveMorphologicalFilter",
     nonground_segmenter_type: "RegionEuclideanSegmenter",
 
     ## Important to use roi filter to speed up "ground segmentation"
