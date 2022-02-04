@@ -65,6 +65,8 @@
   <depend>image_transport</depend>
   <depend>nodelet</depend>
 
+  <depend>pointcloud_to_laserscan</depend>
+
   <depend>common_lib</depend>
   <depend>roi_filters_lib</depend>
   <depend>feature_extractors_lib</depend>

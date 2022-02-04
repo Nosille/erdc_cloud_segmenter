@@ -1,0 +1,18 @@
+transform_tolerance: 0.01
+min_height: -1.4
+max_height: 0.5
+
+angle_min: -3.1415 # -M_PI/2
+angle_max: 3.1415 # M_PI/2
+angle_increment: 0.01 # M_PI/360.0
+scan_time: 0.1
+range_min: 2.0
+range_max: 100
+use_inf: true
+#target_frame: "base_footprint"
+
+# Concurrency level, affects number of pointclouds queued for processing and number of threads used
+# 0 : Detect number of cores
+# 1 : Single threaded
+# 2->inf : Parallelism level
+concurrency_level: 0

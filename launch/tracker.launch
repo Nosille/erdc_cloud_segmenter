@@ -25,6 +25,16 @@
         <node ns="$(arg nodelet_namespace)" name="tracker_node" 
               pkg="nodelet" type="nodelet" args="load erdc_cloud_segmenter/tracker_nodelet /$(arg nodelet_namespace)/$(arg nodelet_manager)" 
               machine="$(arg machine)" output="$(arg output)"/>
+
+        <!-- pointcloud_to_laserscan -->
+        <node ns="$(arg nodelet_namespace)" name="obstacle_to_laserscan" 
+              pkg="nodelet" type="nodelet" 
+              args="load pointcloud_to_laserscan/pointcloud_to_laserscan_nodelet /$(arg nodelet_namespace)/$(arg nodelet_manager)" 
+              machine="$(arg machine)" output="$(arg output)">
+            <rosparam command="load"   file="$(arg pointcloud_to_laserscan_yaml)"/>
+            <remap from="cloud_in"     to="$(arg input_topic)/points_nonground"/>
+            <remap from="scan"         to="$(arg input_topic)/points_nonground/laserscan"/>
+        </node>          
     </group>
 
     <!-- Launch as Node -->
@@ -35,6 +45,15 @@
         <node ns="$(arg nodelet_namespace)" name="tracker_node" 
               pkg="cloud_segmenter" type="tracker" 
               machine="$(arg machine)" output="$(arg output)"/>
+
+        <!-- Run pointcloud_to_laserscan node -->
+        <node ns="$(arg nodelet_namespace)" name="obstacle_to_laserscan"
+        pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" 
+        machine="$(arg machine)" output="$(arg output)">
+            <rosparam command="load"   file="$(arg pointcloud_to_laserscan_yaml)"/>
+            <remap from="cloud_in"     to="$(arg input_topic)/points_nonground"/>
+            <remap from="scan"         to="$(arg input_topic)/points_nonground/laserscan"/>
+        </node>
     </group>
    
 </launch>
