@@ -4,25 +4,31 @@
 
     <arg name="run_as_nodelet"                          default="true"/>
     <arg name="nodelet_manager"                         default="segmenter_nodelet_manager"/>
-    <arg name="nodelet_namespace"                       default="cloud_segmenter"/>
+    <arg name="nodelet_namespace"                       default="reo_sensor_fusion"/>
     <arg name="start_nodelet_manager"                   default="true"/>
 
-    <arg name="tracker_yaml"                          default="$(find erdc_cloud_segmenter)/config/tracker.yaml"/>
+    <arg name="input_topic"                             default="/lidar/merged"/>
+
+    <arg name="segmenter_yaml"                          default="$(find erdc_cloud_segmenter)/config/tracker.yaml"/>
+    <arg name="pointcloud_to_laserscan_yaml"            default="$(find erdc_cloud_segmenter)/config/pointcloud_to_laserscan.yaml"/>    
 
     <node if="$(eval arg('start_nodelet_manager') and arg('run_as_nodelet'))" 
         ns="$(arg nodelet_namespace)" name="$(arg nodelet_manager)" 
-        pkg="nodelet" type="nodelet" args="manager" 
+        pkg="nodelet" type="nodelet" args="manager"
         machine="$(arg machine)" output="$(arg output)"/>
 
     <!-- Load Parameters -->
-    <rosparam command="load" ns="$(arg nodelet_namespace)" file="$(arg tracker_yaml)"/>
+    <group ns="$(arg nodelet_namespace)">
+      <rosparam command="load" file="$(arg segmenter_yaml)"/>
+      <param name="input_topic" value="$(arg input_topic)" if="$(eval arg('input_topic') == '')"/>    
+    </group>
     
     <!-- Launch as Nodelet -->
     <group if="$(arg run_as_nodelet)">
-        <node ns="$(arg nodelet_namespace)" name="segmenter_node" 
+        <node ns="$(arg nodelet_namespace)" name="segmenter_nodelet" 
               pkg="nodelet" type="nodelet" args="load erdc_cloud_segmenter/segmenter_nodelet /$(arg nodelet_namespace)/$(arg nodelet_manager)" 
               machine="$(arg machine)" output="$(arg output)"/>
-        <node ns="$(arg nodelet_namespace)" name="tracker_node" 
+        <node ns="$(arg nodelet_namespace)" name="tracker_nodelet" 
               pkg="nodelet" type="nodelet" args="load erdc_cloud_segmenter/tracker_nodelet /$(arg nodelet_namespace)/$(arg nodelet_manager)" 
               machine="$(arg machine)" output="$(arg output)"/>
 
@@ -34,16 +40,16 @@
             <rosparam command="load"   file="$(arg pointcloud_to_laserscan_yaml)"/>
             <remap from="cloud_in"     to="$(arg input_topic)/points_nonground"/>
             <remap from="scan"         to="$(arg input_topic)/points_nonground/laserscan"/>
-        </node>          
+        </node>     
     </group>
 
     <!-- Launch as Node -->
     <group unless="$(arg run_as_nodelet)">
         <node ns="$(arg nodelet_namespace)" name="segmenter_node" 
-              pkg="cloud_segmenter" type="segmenter" 
+              pkg="erdc_cloud_segmenter" type="segmenter" 
               machine="$(arg machine)" output="$(arg output)"/>
         <node ns="$(arg nodelet_namespace)" name="tracker_node" 
-              pkg="cloud_segmenter" type="tracker" 
+              pkg="erdc_cloud_segmenter" type="tracker" 
               machine="$(arg machine)" output="$(arg output)"/>
 
         <!-- Run pointcloud_to_laserscan node -->

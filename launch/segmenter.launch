@@ -14,7 +14,8 @@
 
     <node if="$(eval arg('start_nodelet_manager') and arg('run_as_nodelet'))" 
         ns="$(arg nodelet_namespace)" name="$(arg nodelet_manager)" 
-        pkg="nodelet" type="nodelet" args="manager" output="screen"/>
+        pkg="nodelet" type="nodelet" args="manager"
+        machine="$(arg machine)" output="$(arg output)"/>
 
     <!-- Load Parameters -->
     <group ns="$(arg nodelet_namespace)">
