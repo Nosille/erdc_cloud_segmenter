@@ -268,15 +268,15 @@ add_dependencies(${PROJECT_NAME}_tracker_lib
   ${catkin_EXPORTED_TARGETS}
 )
 
-# add_dependencies(${PROJECT_NAME}_tracker_node
-#    ${PROJECT_NAME}_gencfg
-# #   ${catkin_EXPORTED_TARGETS}
-# )
+add_dependencies(${PROJECT_NAME}_tracker_node
+   ${PROJECT_NAME}_gencfg
+#   ${catkin_EXPORTED_TARGETS}
+)
 
-# add_dependencies(${PROJECT_NAME}_tracker_nodelet
-#    ${PROJECT_NAME}_gencfg
-# #   ${catkin_EXPORTED_TARGETS}
-# )
+add_dependencies(${PROJECT_NAME}_tracker_nodelet
+   ${PROJECT_NAME}_gencfg
+#   ${catkin_EXPORTED_TARGETS}
+)
 
 #############
 ## Install ##
