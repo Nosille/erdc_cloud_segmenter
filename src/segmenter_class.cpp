@@ -130,58 +130,94 @@ namespace ERDC_Cloud_Segmenter
        pub_nonground_.getNumSubscribers()<=0 &&
        pub_segmented_.getNumSubscribers()<=0) return; 
 
-    autosense::PointICloudPtr cloud(new autosense::PointICloud);
-    pcl::fromROSMsg(*msg, *cloud);
-    ROS_DEBUG_STREAM(" Cloud inputs: " << cloud->size() << " Points");
+    autosense::PointCloud2Ptr cloud_pc2(new autosense::PointCloud2);
+    pcl_conversions::toPCL(*msg, *cloud_pc2);
+    ROS_DEBUG_STREAM(" Cloud inputs: " << (cloud_pc2->height*cloud_pc2->width) << " Points");
 
     std_msgs::Header header = msg->header;
 
   //ROI filter
     if (segmenterConfig_.use_roi_filter) 
     {
-        autosense::roi::applyROIFilter<autosense::PointI>(params_roi_, cloud);
+        autosense::roi::applyROIFilter(params_roi_, cloud_pc2);
     }
-    ROS_DEBUG_STREAM(" After ROIFilter: " << cloud->size() << " Points");
+    ROS_DEBUG_STREAM(" After ROIFilter: " << (cloud_pc2->height*cloud_pc2->width) << " Points");
 
 
   //Ground Segmenter
     //Segment
-    std::vector<autosense::PointICloudPtr> cloud_clusters;
-    autosense::PointICloudPtr cloud_ground(new autosense::PointICloud);
-    autosense::PointICloudPtr cloud_nonground(new autosense::PointICloud);
+    std::vector<pcl::PointIndices> clusters_indices;
+    autosense::PointCloud2Ptr cloud_ground(new autosense::PointCloud2);
+    autosense::PointCloud2Ptr cloud_nonground(new autosense::PointCloud2);
+
     if (segmenterConfig_.use_ground_segmenter) 
     {
-       ground_segmenter_->segment(*cloud, cloud_clusters);
-       *cloud_ground = *cloud_clusters[0];
-       *cloud_nonground = *cloud_clusters[1];
+      autosense::PointICloudPtr cloud(new autosense::PointICloud);
+      pcl::fromPCLPointCloud2(*cloud_pc2, *cloud);
+      ground_segmenter_->segment(*cloud, clusters_indices);
+      pcl::PointIndices::Ptr ground_indices(new pcl::PointIndices);
+      *ground_indices = clusters_indices[0];
 
-       //Convert to sensor_msgs and publish ground
-       if(pub_ground_.getNumSubscribers()>0) 
-       {
-         sensor_msgs::PointCloud2::Ptr ground_out(new sensor_msgs::PointCloud2);  //nodelets require the published msg to be a pointer
-         autosense::common::publishCloud<autosense::PointI>(pub_ground_, header, *cloud_ground);
-       }
+      if (ground_indices->indices.size() > 0) {
+        pcl::ExtractIndices<autosense::PointCloud2> indiceExtractor;
+        indiceExtractor.setInputCloud(cloud_pc2);
+        indiceExtractor.setIndices(ground_indices);
+
+        // extract ground points
+        indiceExtractor.setNegative(false);
+        indiceExtractor.filter(*cloud_ground);
+
+        // extract non-ground points
+        indiceExtractor.setNegative(true);
+        indiceExtractor.filter(*cloud_nonground);
+      }
+
+      //Convert to sensor_msgs and publish ground
+      if(pub_ground_.getNumSubscribers()>0) 
+      {
+        ROS_DEBUG_STREAM(" Cloud Ground: " << (cloud_ground->height*cloud_ground->width) << " Points");
+        sensor_msgs::PointCloud2::Ptr ground_out(new sensor_msgs::PointCloud2);  //nodelets require the published msg to be a pointer
+        autosense::common::publishCloud(pub_ground_, header, *cloud_ground);
+      }
     }
     else 
     {
-      *cloud_nonground = *cloud;
+      *cloud_nonground = *cloud_pc2;
     }
    
     //Convert to sensor_msgs and publish nonground
     if(pub_nonground_.getNumSubscribers()>0) 
     {
+      ROS_DEBUG_STREAM(" Cloud NonGround: " << (cloud_nonground->height*cloud_nonground->width) << " Points");
       sensor_msgs::PointCloud2::Ptr nonground_out(new sensor_msgs::PointCloud2);  //nodelets require the published msg to be a pointer
-      autosense::common::publishCloud<autosense::PointI>(pub_nonground_, header, *cloud_nonground);
+      autosense::common::publishCloud(pub_nonground_, header, *cloud_nonground);
     }
 
   //Nonground segmenter
+    std::vector<autosense::PointCloud2> cloud_clusters;
     if (segmenterConfig_.use_nonground_segmenter  && pub_segmented_.getNumSubscribers()>0) 
     {
       // reset clusters
-      cloud_clusters.clear();
+      clusters_indices.clear();
       //publish cloud array
-      nonground_segmenter_->segment(*cloud_nonground, cloud_clusters);
-      autosense::common::publishPointCloudArray<autosense::PointICloudPtr>(pub_segmented_, header, cloud_clusters);
+      autosense::PointICloudPtr cloud(new autosense::PointICloud);
+      pcl::fromPCLPointCloud2(*cloud_nonground, *cloud);
+      nonground_segmenter_->segment(*cloud, clusters_indices);
+      for(int i; i<clusters_indices.size(); i++)
+      {
+        
+        // extract points
+        pcl::ExtractIndices<autosense::PointCloud2> indiceExtractor;
+        pcl::PointIndices::Ptr current_indices;
+        *current_indices = clusters_indices[i];
+        indiceExtractor.setInputCloud(cloud_pc2);
+        indiceExtractor.setIndices(current_indices);
+        indiceExtractor.setNegative(false);
+        autosense::PointCloud2 current_cluster;
+        indiceExtractor.filter(current_cluster);
+        cloud_clusters.push_back(current_cluster);
+      }
+      autosense::common::publishPointCloudArray(pub_segmented_, header, cloud_clusters);
     }
     
     ros::WallDuration duration = ros::WallTime::now() - begin;
