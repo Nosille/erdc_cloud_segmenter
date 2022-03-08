@@ -208,7 +208,7 @@ namespace ERDC_Cloud_Segmenter
         
         // extract points
         pcl::ExtractIndices<autosense::PointCloud2> indiceExtractor;
-        pcl::PointIndices::Ptr current_indices;
+        pcl::PointIndices::Ptr current_indices(new pcl::PointIndices);
         *current_indices = clusters_indices[i];
         indiceExtractor.setInputCloud(cloud_pc2);
         indiceExtractor.setIndices(current_indices);
