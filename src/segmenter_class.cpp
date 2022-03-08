@@ -210,7 +210,7 @@ namespace ERDC_Cloud_Segmenter
         pcl::ExtractIndices<autosense::PointCloud2> indiceExtractor;
         pcl::PointIndices::Ptr current_indices(new pcl::PointIndices);
         *current_indices = clusters_indices[i];
-        indiceExtractor.setInputCloud(cloud_pc2);
+        indiceExtractor.setInputCloud(cloud_nonground);
         indiceExtractor.setIndices(current_indices);
         indiceExtractor.setNegative(false);
         autosense::PointCloud2 current_cluster;
