@@ -105,7 +105,8 @@ namespace ERDC_Cloud_Segmenter
     std::unique_ptr<autosense::segmenter::BaseSegmenter> nonground_segmenter_;
 
     // Methods
-    
+    void sorFilter(pcl::PCLPointCloud2::Ptr& cloud);
+
     //Variables
     std::string map_frame_id_, sensor_frame_id_;
     std::string input_topic_, ground_topic_, nonground_topic_, clusters_topic_;

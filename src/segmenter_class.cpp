@@ -170,6 +170,8 @@ namespace ERDC_Cloud_Segmenter
         // extract non-ground points
         indiceExtractor.setNegative(true);
         indiceExtractor.filter(*cloud_nonground);
+
+        sorFilter(cloud_nonground);
       }
 
       //Convert to sensor_msgs and publish ground
@@ -224,5 +226,42 @@ namespace ERDC_Cloud_Segmenter
     ROS_DEBUG_STREAM_NAMED(node_name, "Segmentation took " << duration.toSec() << "sec");
   }
 
+/**
+   * @brief @b StatisticalOutlierRemoval uses point neighborhood statistics to filter outlier data.
+  * \details The algorithm iterates through the entire input twice:
+  * During the first iteration it will compute the average distance that each point has to its nearest k neighbors.
+  * The value of k can be set using setMeanK().
+  * Next, the mean and standard deviation of all these distances are computed in order to determine a distance threshold.
+  * The distance threshold will be equal to: mean + stddev_mult * stddev.
+  * The multiplier for the standard deviation can be set using setStddevMulThresh().
+  * During the next iteration the points will be classified as inlier or outlier if their average neighbor distance is below or above this threshold respectively.
+  * <br>
+  * The neighbors found for each query point will be found amongst ALL points of setInputCloud(), not just those indexed by setIndices().
+  * The setIndices() method only indexes the points that will be iterated through as search query points.
+  * <br><br>
+  * For more information:
+  *   - R. B. Rusu, Z. C. Marton, N. Blodow, M. Dolha, and M. Beetz.
+  *     Towards 3D Point Cloud Based Object Maps for Household Environments
+  *     Robotics and Autonomous Systems Journal (Special Issue on Semantic Knowledge), 2008.
+  * <br><br>
+   * 
+   * @param cloud
+   */
+  void Segmenter::sorFilter(pcl::PCLPointCloud2::Ptr& cloud)
+  {
+    ros::WallTime filter_time = ros::WallTime::now();
+
+    if (segmenterConfig_.sor_filter)
+    {
+      pcl::StatisticalOutlierRemoval<pcl::PCLPointCloud2> sor;
+      sor.setInputCloud (cloud);
+      sor.setMeanK (segmenterConfig_.sor_meanK);
+      sor.setStddevMulThresh (segmenterConfig_.sor_stddevMulThresh);
+      sor.filter (*cloud);
+
+      ros::WallDuration filter_duration = ros::WallTime::now() - filter_time;
+      ROS_DEBUG_STREAM_NAMED(node_name, "Sor Filter took: " << filter_duration.toSec() << "sec");
+    }
+  }
 } // namespace ERDC_Cloud_Segmenter
 
