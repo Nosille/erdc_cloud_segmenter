@@ -18,20 +18,20 @@
         machine="$(arg machine)" output="$(arg output)"/>
 
     <!-- Load Parameters -->
-    <group ns="$(arg nodelet_namespace)">
+    <!-- <group ns="$(arg nodelet_namespace)"> -->
       <rosparam command="load" file="$(arg segmenter_yaml)"/>
       <param name="input_topic" value="$(arg input_topic)" if="$(eval arg('input_topic') == '')"/>    
-    </group>
+    <!-- </group> -->
 
     <!-- Launch as Nodelet -->
     <group if="$(arg run_as_nodelet)">
         <!-- Launch detection_nodelet -->
-        <node ns="$(arg nodelet_namespace)" name="segmenter_nodelet" 
+        <node name="segmenter_nodelet" 
               pkg="nodelet" type="nodelet" args="load erdc_cloud_segmenter/segmenter_nodelet /$(arg nodelet_namespace)/$(arg nodelet_manager)" 
               machine="$(arg machine)" output="$(arg output)"/>
         
         <!-- pointcloud_to_laserscan -->
-        <node ns="$(arg nodelet_namespace)" name="obstacle_to_laserscan" 
+        <node name="obstacle_to_laserscan" 
               pkg="nodelet" type="nodelet" 
               args="load pointcloud_to_laserscan/pointcloud_to_laserscan_nodelet /$(arg nodelet_namespace)/$(arg nodelet_manager)" 
               machine="$(arg machine)" output="$(arg output)">
@@ -44,17 +44,19 @@
     <!-- Launch as Node -->
     <group unless="$(arg run_as_nodelet)">
         <!-- Launch detection_node -->
-        <node ns="$(arg nodelet_namespace)" name="segmenter_node" 
+        <node name="segmenter_node" 
         pkg="erdc_cloud_segmenter" type="segmenter" 
         machine="$(arg machine)" output="$(arg output)"/>
 
         <!-- Run pointcloud_to_laserscan node -->
-        <node ns="$(arg nodelet_namespace)" name="obstacle_to_laserscan"
+        <node name="obstacle_to_laserscan"
         pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" 
         machine="$(arg machine)" output="$(arg output)">
             <rosparam command="load"   file="$(arg pointcloud_to_laserscan_yaml)"/>
             <remap from="cloud_in"     to="$(arg input_topic)/points_nonground"/>
             <remap from="scan"         to="$(arg input_topic)/points_nonground/laserscan"/>
+            <remap from="scan_min"     to="$(arg input_topic)/points_nonground/laserscan_min"/>
+            <remap from="scan_max"     to="$(arg input_topic)/points_nonground/laserscan_max"/>
         </node>
     </group>
    

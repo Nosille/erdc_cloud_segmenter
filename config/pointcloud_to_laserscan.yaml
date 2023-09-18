@@ -9,7 +9,7 @@ scan_time: 0.1
 range_min: 2.0
 range_max: 100
 use_inf: true
-#target_frame: "base_footprint"
+target_frame: "base_gimbal"
 
 # Concurrency level, affects number of pointclouds queued for processing and number of threads used
 # 0 : Detect number of cores
